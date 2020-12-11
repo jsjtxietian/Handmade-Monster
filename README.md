@@ -39,4 +39,8 @@
   }
   ```
 
+* day9
   
+  * DirectSound，注意PlayCursor & WriteCursor，延迟(Audio latency) is determined not by the size of the buffer, but by how far ahead of the PlayCursor you write. The optimal amount of latency is the amount that will cause this frame's audio to coincide with the display of this frame's image. On most platforms, it is very difficult to ascertain the proper amount of latency. It's an unsolved problem, and games with need precise AV sync (like Guitar Hero) go to some lengths to achieve it.
+  * 定点数，https://zhuanlan.zhihu.com/p/149517485
+  * 注意手柄的dead zone
