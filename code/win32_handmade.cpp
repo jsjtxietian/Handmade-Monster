@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <stdint.h>
 #include <xinput.h>
+#include <stdio.h>
 #include <dsound.h>
 #include <math.h>
 
@@ -125,29 +126,29 @@ Win32InitDSound(HWND Window, int32 SamplesPerSecond, int32 BufferSize)
                 BufferDescription.dwSize = sizeof(BufferDescription);
                 BufferDescription.dwFlags = DSBCAPS_PRIMARYBUFFER;
 
-                // NOTE(casey): "Create" a primary buffer
+                // NOTE: "Create" a primary buffer
                 LPDIRECTSOUNDBUFFER PrimaryBuffer;
                 if (SUCCEEDED(DirectSound->CreateSoundBuffer(&BufferDescription, &PrimaryBuffer, 0)))
                 {
                     HRESULT Error = PrimaryBuffer->SetFormat(&WaveFormat);
                     if (SUCCEEDED(Error))
                     {
-                        // NOTE(casey): We have finally set the format!
+                        // NOTE: We have finally set the format!
                         OutputDebugStringA("Primary buffer format was set.\n");
                     }
                     else
                     {
-                        // TODO(casey): Diagnostic
+                        // TODO: Diagnostic
                     }
                 }
                 else
                 {
-                    // TODO(casey): Diagnostic
+                    // TODO: Diagnostic
                 }
             }
             else
             {
-                // TODO(casey): Diagnostic
+                // TODO: Diagnostic
             }
 
             DSBUFFERDESC BufferDescription = {};
@@ -163,12 +164,12 @@ Win32InitDSound(HWND Window, int32 SamplesPerSecond, int32 BufferSize)
         }
         else
         {
-            // TODO(casey): Diagnostic
+            // TODO: Diagnostic
         }
     }
     else
     {
-        // TODO(casey): Diagnostic
+        // TODO: Diagnostic
     }
 }
 
@@ -387,7 +388,7 @@ struct win32_sound_output
 internal void
 Win32FillSoundBuffer(win32_sound_output *SoundOutput, DWORD ByteToLock, DWORD BytesToWrite)
 {
-    // TODO(casey): More strenuous test!
+    // TODO: More strenuous test!
     VOID *Region1;
     DWORD Region1Size;
     VOID *Region2;
@@ -397,16 +398,16 @@ Win32FillSoundBuffer(win32_sound_output *SoundOutput, DWORD ByteToLock, DWORD By
                                               &Region2, &Region2Size,
                                               0)))
     {
-        // TODO(casey): assert that Region1Size/Region2Size is valid
+        // TODO: assert that Region1Size/Region2Size is valid
 
-        // TODO(casey): Collapse these two loops
+        // TODO: Collapse these two loops
         DWORD Region1SampleCount = Region1Size / SoundOutput->BytesPerSample;
         int16 *SampleOut = (int16 *)Region1;
         for (DWORD SampleIndex = 0;
              SampleIndex < Region1SampleCount;
              ++SampleIndex)
         {
-            // TODO(casey): Draw this out for people
+            // TODO: Draw this out for people
             real32 SineValue = sinf(SoundOutput->tSine);
             int16 SampleValue = (int16)(SineValue * SoundOutput->ToneVolume);
             *SampleOut++ = SampleValue;
@@ -441,6 +442,10 @@ WinMain(HINSTANCE Instance,
         LPSTR CommandLine,
         int ShowCode)
 {
+    LARGE_INTEGER PerfCountFrequencyResult;
+    QueryPerformanceFrequency(&PerfCountFrequencyResult);
+    int64 PerfCountFrequency = PerfCountFrequencyResult.QuadPart;
+
     Win32LoadXInput();
 
     WNDCLASSA WindowClass = {};
@@ -476,12 +481,12 @@ WinMain(HINSTANCE Instance,
             // are not sharing it with anyone.
             HDC DeviceContext = GetDC(Window);
 
-            // NOTE(casey): Graphics test
+            // NOTE: Graphics test
             int XOffset = 0;
             int YOffset = 0;
 
             win32_sound_output SoundOutput = {};
-            // TODO(casey): Make this like sixty seconds?
+            // TODO: Make this like sixty seconds?
             SoundOutput.SamplesPerSecond = 48000;
             SoundOutput.ToneHz = 256;
             SoundOutput.ToneVolume = 3000;
@@ -494,6 +499,10 @@ WinMain(HINSTANCE Instance,
             GlobalSecondaryBuffer->Play(0, 0, DSBPLAY_LOOPING);
 
             GlobalRunning = true;
+            LARGE_INTEGER LastCounter;
+            QueryPerformanceCounter(&LastCounter);
+            uint64 LastCycleCount = __rdtsc();
+
             while (GlobalRunning)
             {
                 MSG Message;
@@ -537,7 +546,7 @@ WinMain(HINSTANCE Instance,
                         int16 StickX = Pad->sThumbLX;
                         int16 StickY = Pad->sThumbLY;
 
-                        // TODO(casey): We will do deadzone handling later using
+                        // TODO: We will do deadzone handling later using
                         // XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE
                         // XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE 8689
 
@@ -561,7 +570,7 @@ WinMain(HINSTANCE Instance,
 
                 RenderWeirdGradient(&GlobalBackbuffer, XOffset, YOffset);
 
-                // NOTE(casey): DirectSound output test
+                // NOTE: DirectSound output test
                 DWORD PlayCursor;
                 DWORD WriteCursor;
                 if (SUCCEEDED(GlobalSecondaryBuffer->GetCurrentPosition(&PlayCursor, &WriteCursor)))
@@ -574,7 +583,7 @@ WinMain(HINSTANCE Instance,
                           (SoundOutput.LatencySampleCount * SoundOutput.BytesPerSample)) %
                          SoundOutput.SecondaryBufferSize);
                     DWORD BytesToWrite;
-                    // TODO(casey): Change this to using a lower latency offset from the playcursor
+                    // TODO: Change this to using a lower latency offset from the playcursor
                     // when we actually start having sound effects.
                     if (ByteToLock > TargetCursor)
                     {
@@ -591,6 +600,25 @@ WinMain(HINSTANCE Instance,
 
                 win32_window_dimension Dimension = Win32GetWindowDimension(Window);
                 Win32DisplayBufferInWindow(&GlobalBackbuffer, DeviceContext, Dimension.Width, Dimension.Height);
+
+                uint64 EndCycleCount = __rdtsc();
+
+                LARGE_INTEGER EndCounter;
+                QueryPerformanceCounter(&EndCounter);
+
+                // TODO: Display the value here
+                uint64 CyclesElapsed = EndCycleCount - LastCycleCount;
+                int64 CounterElapsed = EndCounter.QuadPart - LastCounter.QuadPart;
+                real64 MSPerFrame = (((1000.0f * (real64)CounterElapsed) / (real64)PerfCountFrequency));
+                real64 FPS = (real64)PerfCountFrequency / (real64)CounterElapsed;
+                real64 MCPF = ((real64)CyclesElapsed / (1000.0f * 1000.0f));
+
+                char Buffer[256];
+                sprintf(Buffer, "%.02fms/f,  %.02ff/s,  %.02fmc/f\n", MSPerFrame, FPS, MCPF);
+                OutputDebugStringA(Buffer);
+
+                LastCounter = EndCounter;
+                LastCycleCount = EndCycleCount;
             }
         }
         else
