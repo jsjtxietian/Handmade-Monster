@@ -583,8 +583,6 @@ WinMain(HINSTANCE Instance,
                           (SoundOutput.LatencySampleCount * SoundOutput.BytesPerSample)) %
                          SoundOutput.SecondaryBufferSize);
                     DWORD BytesToWrite;
-                    // TODO: Change this to using a lower latency offset from the playcursor
-                    // when we actually start having sound effects.
                     if (ByteToLock > TargetCursor)
                     {
                         BytesToWrite = (SoundOutput.SecondaryBufferSize - ByteToLock);
