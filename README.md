@@ -103,7 +103,18 @@ Win32LoadXInput(void)
 * 所有函数都是internal，给static提示编译器不用external linking
 
 #### day14 Game Memory
-* dynamic allocation spreads management across code， make it opaque; allocation is another trip through the platform layer(game as a service to platform). Main Memory Pool is guranteed to run, instead of dynamic allocation.
+* dynamic allocation spreads management across code， make it opaque; allocation is another trip through the platform layer(game as a service to platform). 
+
+* Main Memory Pool is guranteed to run, instead of dynamic allocation.
+
 * Integral promotion https://docs.microsoft.com/en-us/cpp/cpp/standard-conversions?view=msvc-160
-* #define Assert(Expression) if(!(Expression)) {*(int *)0 = 0;}
+
+  ```C++
+  //LL防止溢出
+  #define Kilobytes(Value) ((Value)*1024LL)
+  
+  //define assert(not complete)
+  #define Assert(Expression) if(!(Expression)) {*(int *)0 = 0;}
+  ```
+
   
