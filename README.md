@@ -2,7 +2,9 @@
 
  study note of [Handmade Hero](https://handmadehero.org/)
 
-#### day3,  用define来标志不同static的语义
+#### day3
+
+用define来标志不同static的语义
 
 ```c++
 #define internal static
@@ -14,7 +16,11 @@
 
 [Pointer aliasing - Wikipedia](https://en.wikipedia.org/wiki/Pointer_aliasing)
 
-#### day6，用define作为辅助定义相同的函数类型，从代码load dll，失败则利用桩函数。
+[GCC 4 编译警告：warning: dereferencing type-punned pointer will break strict-aliasing rules 有什么比较好的解决办法？ - 知乎 (zhihu.com)](https://www.zhihu.com/question/19707376/answer/1174526354)
+
+#### day6 XInput
+
+用define作为辅助定义相同的函数类型，从代码load dll，失败则利用桩函数。
 
 ```c++
 #define X_INPUT_GET_STATE(name) DWORD WINAPI name(DWORD dwUserIndex, XINPUT_STATE *pState)
@@ -43,7 +49,7 @@ Win32LoadXInput(void)
 
 #### day9 声音
 
-* DirectSound，注意PlayCursor & WriteCursor，延迟(Audio latency) is determined not by the size of the buffer, but by how far ahead of the PlayCursor you write. The optimal amount of latency is the amount that will cause this frame's audio to coincide with the display of this frame's image. On most platforms, it is very difficult to ascertain the proper amount of latency. It's an unsolved problem, and games with need precise AV sync (like Guitar Hero) go to some lengths to achieve it.
+* DirectSound，注意PlayCursor & WriteCursor，延迟(Audio latency) is determined not by the size of the buffer, but by how far ahead of the PlayCursor you write. The optimal amount of latency is the amount that will cause this frame's audio to coincide with the display of this frame's image. On most platforms, it is very difficult to ascertain the proper amount of latency. It's an unsolved problem, and games with need precise AV sync (like Guitar Hero) go to some lengths to achieve it. 
 * 定点数，https://zhuanlan.zhihu.com/p/149517485
 * 注意手柄的dead zone
 
@@ -58,7 +64,7 @@ Win32LoadXInput(void)
 * float和double的精度问题，[eelpi.gotdns.org/blog.wiki.html](http://eelpi.gotdns.org/blog.wiki.html)
 
 
-#### day11
+#### day11 游戏架构
 * Unity build
   * [Unity build - Wikipedia](https://en.wikipedia.org/wiki/Unity_build)
   * [c++ - #include all .cpp files into a single compilation unit? - Stack Overflow](https://stackoverflow.com/questions/543697/include-all-cpp-files-into-a-single-compilation-unit)
@@ -117,4 +123,68 @@ Win32LoadXInput(void)
   #define Assert(Expression) if(!(Expression)) {*(int *)0 = 0;}
   ```
 
-  
+#### day17 Unified Keyboard and Gamepad Input
+
+4个控制器 + 键盘输入，共5个Input结构体，统一键盘和控制器输入。将DPAD隐射位stick(1)；记录stick的平均值，将stick的dash操作映射为MoveUp等。
+
+```C++
+struct game_controller_input
+{
+    bool32 IsConnected;
+    bool32 IsAnalog;    
+    real32 StickAverageX;
+    real32 StickAverageY;
+    
+    union
+    {
+        game_button_state Buttons[12];
+        struct
+        {
+            game_button_state MoveUp;
+            game_button_state MoveDown;
+            game_button_state MoveLeft;
+            game_button_state MoveRight;
+            
+            game_button_state ActionUp;
+            game_button_state ActionDown;
+            game_button_state ActionLeft;
+            game_button_state ActionRight;
+            
+            game_button_state LeftShoulder;
+            game_button_state RightShoulder;
+
+            game_button_state Back;
+            game_button_state Start;
+            
+            game_button_state Terminator;
+        };
+    };
+};
+//12 和 struct的数量相对应；offsetof也可以
+Assert((&Input->Controllers[0].Terminator - &Input->Controllers[0].Buttons[0]) == (ArrayCount(Input->Controllers[0].Buttons)));
+```
+
+#### day20 Audio Sync
+
+* 几种处理audio的方式，always hit frame rate；overwrite the next frame，frame of lag；gurad thread。
+
+* 一帧之内：gather Input => update the game (physics & render prep) => render => wait the flip (流水线)
+
+* audio lag vs. Input lag，如果在第一帧渲染的同时就在另一个core上开启下一帧的Input & update，计算下一帧的声音，那么，等到下一帧的渲染结束并wait后，可能可以达到audio sync的效果（计算好声音到画面实际显示的时间大于一帧多）；但提前计算了Input，会导致Input lag
+
+* audio clock和wall clock不一定同（PlayCursor和WriteCursor更新有延迟）
+
+*     Here is how sound output computation works. We define a safety value that is the number of samples we think our game update loop may vary by (let's say up to 2ms)
+      When we wake up to write audio, we will look and see what the play cursor position is and we will forecast ahead where we think the play cursor will be on the next frame boundary.
+      We will then look to see if the write cursor is before that by at least our safety value.  If it is, the target fill position is that frame boundary plus one frame.  This gives us perfect audio sync in the case of a card that has low enough latency.
+      If the write cursor is _after_ that safety margin, then we assume we can never sync the audio perfectly, so we will write one frame's worth of audio plus the safety margin's worth of guard samples.
+  对于低延迟，也就是WriteCursor在本帧之内，就从WriteCursor写到WriteCursor + SamplesPerFrame的那一帧的边界；对于高延迟，例如，write cursor在下帧，写到WriteCursor + SamplesPerFrame + SafetyMargin (small)
+
+* keep code fluid and a little bit messy in early stages
+
+#### day21 Load Game Code dynamically
+
+* 因为Game as a service to platform，可以platform动态加载Game编译好的dll（memory等都是platform创建而传给Game的），Game要用platform的函数可以让platform传函数指针。
+* dll，注意 extern "C" to prevent name mangling
+* 不自己写dll读取函数的原因：希望debugger能自动拿到读取的dll的调试信息
+* [Potential Errors Passing CRT Objects Across DLL Boundaries | Microsoft Docs](https://docs.microsoft.com/en-us/cpp/c-runtime-library/potential-errors-passing-crt-objects-across-dll-boundaries?redirectedfrom=MSDN&view=msvc-160)
