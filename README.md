@@ -2,6 +2,10 @@
 
  study note of [Handmade Hero](https://handmadehero.org/)
 
+#### Intro to C
+
+* [Semantic Compression (caseymuratori.com)](https://caseymuratori.com/blog_0015)
+
 #### day3
 
 用define来标志不同static的语义
@@ -56,7 +60,7 @@ Win32LoadXInput(void)
 #### day10 时间
 
 * Wall clock time，QueryPerformanceCounter，To time a frame, only query the timer once per frame, otherwise your timer will leave out time between last frame's end and this frame's start.
-* Processor time，RDTSC，Every x86 family proccessor has a [Timestamp Counter (TSC)](http://en.wikipedia.org/wiki/Time_Stamp_Counter), which increments with every clock cycle since it was reset. RDTSC is a processor intruction that reads the TSC into general purpose registers. For processors before Sandy Bridge but after dynamic clocking, RDTSC gave us actual clocks, Since Sandy Bridge, they give us "nominal" clocks, which is to say the number of clocks elapsed at the chip's nominal frequency. 较新可以使用**RDTSCP**（不受乱序影响，还能返回一个 pid）
+* Processor time，RDTSC，Every x86 family proccessor has a [Timestamp Counter (TSC)](http://en.wikipedia.org/wiki/Time_Stamp_Counter), which increments with every clock cycle since it was reset. RDTSC is a processor intruction that reads the TSC into general purpose registers. For processors before Sandy Bridge but after dynamic clocking, RDTSC gave us actual clocks, Since Sandy Bridge, they give us "nominal" clocks, which is to say the number of clocks elapsed at the chip's nominal frequency. 较新可以使用**RDTSCP**（不受乱序影响，还能返回一个 pid）**用来profile**
 * [Acquiring high-resolution time stamps - Win32 apps | Microsoft Docs](https://docs.microsoft.com/en-us/windows/win32/sysinfo/acquiring-high-resolution-time-stamps)
 * milo的精度做法：[nativejson-benchmark/timer.h at master · miloyip/nativejson-benchmark (github.com)](https://github.com/miloyip/nativejson-benchmark/blob/master/src/timer.h)，cherno的做法：C++11的high_resolution_clock
 * An [intrinsic](http://en.wikipedia.org/wiki/Intrinsic_function) is a compiler-specific extension that allows direct invocation of some processor instruction. They generally need to be extensions to the compiler so they can avoid all the expensive niceties compilers have to afford functions.
@@ -188,3 +192,15 @@ Assert((&Input->Controllers[0].Terminator - &Input->Controllers[0].Buttons[0]) =
 * dll，注意 extern "C" to prevent name mangling
 * 不自己写dll读取函数的原因：希望debugger能自动拿到读取的dll的调试信息
 * [Potential Errors Passing CRT Objects Across DLL Boundaries | Microsoft Docs](https://docs.microsoft.com/en-us/cpp/c-runtime-library/potential-errors-passing-crt-objects-across-dll-boundaries?redirectedfrom=MSDN&view=msvc-160)
+
+#### day23 Looped Live Code Editing
+
+* 每次reload dll的时候，vs会锁pdb文件，每次生成pbd加上时间戳（锁ddl可以靠copyfile重命名绕过）
+* DSL或lua等脚本语言，与其发明个新语言，为啥不写个更好的C preprocessor（C也可以hot reload）
+* 因为良好的架构，playback很简单，记下record开始时候的game memory（有相同的base address，因此指针之类也不用变）和之后所有的Input。C++的面向对象有vtable指针，没法直接用这个办法。
+* [Address space layout randomization - Wikipedia](https://en.wikipedia.org/wiki/Address_space_layout_randomization)
+
+#### day25
+
+* [Memory-mapped file - Wikipedia](https://en.wikipedia.org/wiki/Memory-mapped_file)
+* [Direct memory access - Wikipedia](https://en.wikipedia.org/wiki/Direct_memory_access)
