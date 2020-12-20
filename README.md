@@ -5,6 +5,10 @@
 #### Intro to C
 
 * [Semantic Compression (caseymuratori.com)](https://caseymuratori.com/blog_0015)
+* 如何问问题：
+  *  http://sscce.org/
+  * http://www.catb.org/~esr/faqs/smart-questions.html
+  * https://xyproblem.info/
 
 #### day3
 
@@ -178,10 +182,11 @@ Assert((&Input->Controllers[0].Terminator - &Input->Controllers[0].Buttons[0]) =
 
 * audio clock和wall clock不一定同（PlayCursor和WriteCursor更新有延迟）
 
-*     Here is how sound output computation works. We define a safety value that is the number of samples we think our game update loop may vary by (let's say up to 2ms)
-      When we wake up to write audio, we will look and see what the play cursor position is and we will forecast ahead where we think the play cursor will be on the next frame boundary.
-      We will then look to see if the write cursor is before that by at least our safety value.  If it is, the target fill position is that frame boundary plus one frame.  This gives us perfect audio sync in the case of a card that has low enough latency.
-      If the write cursor is _after_ that safety margin, then we assume we can never sync the audio perfectly, so we will write one frame's worth of audio plus the safety margin's worth of guard samples.
+* Here is how sound output computation works. We define a safety value that is the number of samples we think our game update loop may vary by (let's say up to 2ms)
+
+  When we wake up to write audio, we will look and see what the play cursor position is and we will forecast ahead where we think the play cursor will be on the next frame boundary.
+  We will then look to see if the write cursor is before that by at least our safety value.  If it is, the target fill position is that frame boundary plus one frame.  This gives us perfect audio sync in the case of a card that has low enough latency.
+  If the write cursor is _after_ that safety margin, then we assume we can never sync the audio perfectly, so we will write one frame's worth of audio plus the safety margin's worth of guard samples.
   对于低延迟，也就是WriteCursor在本帧之内，就从WriteCursor写到WriteCursor + SamplesPerFrame的那一帧的边界；对于高延迟，例如，write cursor在下帧，写到WriteCursor + SamplesPerFrame + SafetyMargin (small)
 
 * keep code fluid and a little bit messy in early stages
@@ -200,7 +205,21 @@ Assert((&Input->Controllers[0].Terminator - &Input->Controllers[0].Buttons[0]) =
 * 因为良好的架构，playback很简单，记下record开始时候的game memory（有相同的base address，因此指针之类也不用变）和之后所有的Input。C++的面向对象有vtable指针，没法直接用这个办法。
 * [Address space layout randomization - Wikipedia](https://en.wikipedia.org/wiki/Address_space_layout_randomization)
 
-#### day25
+#### day25 Clean up
 
 * [Memory-mapped file - Wikipedia](https://en.wikipedia.org/wiki/Memory-mapped_file)
 * [Direct memory access - Wikipedia](https://en.wikipedia.org/wiki/Direct_memory_access)
+
+#### day26 Game Architecture
+
+* 建筑的隐喻，UML as Blueprint，容易失败，耗时太长
+* software designer as urban planner，malleable architecture，draw boundary
+* temporal coupling；layout coupling； idealogical coupling；fluidity
+* 在架构上，不给update和render阶段划boundaries（cache加速）。仅仅
+  1. Input
+  2. Update & Render Prep（and then sound prep）
+  3. GPU
+* Resources：Load 、Streaming
+* Immediate mode（IMGUI），调用方不需要记住目标方的handle，不知道目标方的lifetime；Retained mode，
+  * [Immediate mode GUI - Wikipedia](https://en.wikipedia.org/wiki/Immediate_mode_GUI)
+  * [Retained mode - Wikipedia](https://en.wikipedia.org/wiki/Retained_mode)
