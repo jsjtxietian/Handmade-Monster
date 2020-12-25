@@ -440,11 +440,19 @@ internal void
 Win32DisplayBufferInWindow(win32_offscreen_buffer *Buffer,
                            HDC DeviceContext, int WindowWidth, int WindowHeight)
 {
+    int OffsetX = 10;
+    int OffsetY = 10;
+
+    PatBlt(DeviceContext, 0, 0, WindowWidth, OffsetY, BLACKNESS);
+    PatBlt(DeviceContext, 0, OffsetY + Buffer->Height, WindowWidth, WindowHeight, BLACKNESS);
+    PatBlt(DeviceContext, 0, 0, OffsetX, WindowHeight, BLACKNESS);
+    PatBlt(DeviceContext, OffsetX + Buffer->Width, 0, WindowWidth, WindowHeight, BLACKNESS);
+
     // NOTE: For prototyping purposes, we're going to always blit
     // 1-to-1 pixels to make sure we don't introduce artifacts with
     // stretching while we are learning to code the renderer!
     StretchDIBits(DeviceContext,
-                  0, 0, Buffer->Width, Buffer->Height,
+                  OffsetX, OffsetY, Buffer->Width, Buffer->Height,
                   0, 0, Buffer->Width, Buffer->Height,
                   Buffer->Memory,
                   &Buffer->Info,
@@ -646,6 +654,7 @@ Win32GetInputFileLocation(win32_state *State, bool32 InputStream,
 internal win32_replay_buffer *
 Win32GetReplayBuffer(win32_state *State, int unsigned Index)
 {
+    Assert(Index > 0);
     Assert(Index < ArrayCount(State->ReplayBuffers));
     win32_replay_buffer *Result = &State->ReplayBuffers[Index];
     return (Result);
@@ -1010,7 +1019,7 @@ WinMain(HINSTANCE Instance,
 
     WNDCLASSA WindowClass = {};
 
-    Win32ResizeDIBSection(&GlobalBackbuffer, 1280, 720);
+    Win32ResizeDIBSection(&GlobalBackbuffer, 960, 540);
 
     WindowClass.style = CS_HREDRAW | CS_VREDRAW;
     WindowClass.lpfnWndProc = Win32MainWindowCallback;
@@ -1096,9 +1105,15 @@ WinMain(HINSTANCE Instance,
             GameMemory.DEBUGPlatformReadEntireFile = DEBUGPlatformReadEntireFile;
             GameMemory.DEBUGPlatformWriteEntireFile = DEBUGPlatformWriteEntireFile;
 
-            // TODO: Handle various memory footprints (USING SYSTEM METRICS)
-            // TODO: Use MEM_LARGE_PAGES and call adjust token
-            // privileges when not on Windows XP?
+            // TODO: Handle various memory footprints (USING
+            // SYSTEM METRICS)
+
+            // TODO: Use MEM_LARGE_PAGES and
+            // call adjust token privileges when not on Windows XP?
+
+            // TODO: TransientStorage needs to be broken up
+            // into game transient and cache transient, and only the
+            // former need be saved for state playback.
             Win32State.TotalSize = GameMemory.PermanentStorageSize + GameMemory.TransientStorageSize;
             Win32State.GameMemoryBlock = VirtualAlloc(BaseAddress, (size_t)Win32State.TotalSize,
                                                       MEM_RESERVE | MEM_COMMIT,
@@ -1107,7 +1122,7 @@ WinMain(HINSTANCE Instance,
             GameMemory.TransientStorage = ((uint8 *)GameMemory.PermanentStorage +
                                            GameMemory.PermanentStorageSize);
 
-            for (int ReplayIndex = 0;
+            for (int ReplayIndex = 1;
                  ReplayIndex < ArrayCount(Win32State.ReplayBuffers);
                  ++ReplayIndex)
             {
@@ -1164,6 +1179,8 @@ WinMain(HINSTANCE Instance,
                 uint64 LastCycleCount = __rdtsc();
                 while (GlobalRunning)
                 {
+                    NewInput->dtForFrame = TargetSecondsPerFrame;
+
                     FILETIME NewDLLWriteTime = Win32GetLastWriteTime(SourceGameCodeDLLFullPath);
                     if (CompareFileTime(&NewDLLWriteTime, &Game.DLLLastWriteTime) != 0)
                     {

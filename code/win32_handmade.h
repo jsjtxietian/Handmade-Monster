@@ -1,5 +1,4 @@
 #if !defined(WIN32_HANDMADE_H)
-
 struct win32_offscreen_buffer
 {
     // NOTE: Pixels are alwasy 32-bits wide, Memory Order BB GG RR XX

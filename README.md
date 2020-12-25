@@ -223,3 +223,34 @@ Assert((&Input->Controllers[0].Terminator - &Input->Controllers[0].Buttons[0]) =
 * Immediate mode（IMGUI），调用方不需要记住目标方的handle，不知道目标方的lifetime；Retained mode，
   * [Immediate mode GUI - Wikipedia](https://en.wikipedia.org/wiki/Immediate_mode_GUI)
   * [Retained mode - Wikipedia](https://en.wikipedia.org/wiki/Retained_mode)
+
+#### day35 Tile Map
+
+* Use floating point to store colors, because it will make it a lot more eaiser when we have to do some math about colors
+
+* 帧时间也丢进Input里
+
+* 判断移动和碰撞的时候，一个简单的办法，尝试减少移动步幅多移动几次（直接判断移动的目标是否valid会有这样的问题）
+
+* 把tile的坐标打包进一个32位的int，map级和map内的
+
+* https://software.intel.com/sites/landingpage/IntrinsicsGuide/
+
+* 从persistent memory使用内存：
+
+  ```c++
+  #define PushStruct(Arena, type) (type *)PushSize_(Arena, sizeof(type))
+  #define PushArray(Arena, Count, type) (type *)PushSize_(Arena, (Count)*sizeof(type))
+  void * PushSize_(memory_arena *Arena, memory_index Size)
+  {
+      Assert((Arena->Used + Size) <= Arena->Size);
+      void *Result = Arena->Base + Arena->Used;
+      Arena->Used += Size;
+      
+      return(Result);
+  }
+  ```
+
+* Use random.org to generate some random numbers and use them to generate screen randomly；Allocate space for tiles only when we access
+
+* define和const，define没有type
