@@ -254,3 +254,27 @@ Assert((&Input->Controllers[0].Terminator - &Input->Controllers[0].Buttons[0]) =
 * Use random.org to generate some random numbers and use them to generate screen randomly；Allocate space for tiles only when we access
 
 * define和const，define没有type
+
+#### day40 BMP
+
+* use `#pragma pack(push, 1) and #pragma pack(pop)` to pack our struct correctly。bmp图片，前14个字节是文件信息头，紧接着是40个字节的图像信息头，不需要struct自动补齐
+* Design a very specific BMP to help debug our rendering.  BMP byte order: should determined by masks
+* Define `FindLeastSignificantSetBit` and `bit_scan_result` in intrinsics；Define `COMPILER_MSVC` and `COMPILER_LLVM` macro variables；Use `_BitScanForward` MSVC compiler intrinsic when we are using windows
+* hot load，在编译游戏dll和pdb时，dll会先被编译好，然后几乎立马被读取，那时pdb很可能还没完成，导致vs无法加载新的pdb。解决方案：在编译时搞个lock file，在load dll的时候检测lockfile，如果在的话就等待。
+* Write a `static_check` bat file to make sure we never type `static`
+* Microsoft Spy++是一个非常好的查看Windows操作系统的窗口、消息、进程、线程信息的工具。
+* RESOURCE: How do I switch a window between normal and fullscreen? https://devblogs.microsoft.com/oldnewthing/20100412-00/?p=14353
+
+#### day Player Movement
+
+* [Tagged union - Wikipedia](https://en.wikipedia.org/wiki/Tagged_union)
+
+* [2006--degreve--reflection_refraction.pdf (stanford.edu)](https://graphics.stanford.edu/courses/cs148-10-summer/docs/2006--degreve--reflection_refraction.pdf) Reflect speed when player hits the wall (or make the speed align the wall). This can be implemented by a clever verctor math `v' = v - 2 * Inner(v, r) * r`. r means the vector of the reflecting direction.
+
+* player会stick against wall，会因为一直认为自己会撞进墙而卡住（检测**一帧**后会移动到的地方是不是有碰撞），撞墙的时候要考虑加速度和速度，速度依然指向墙内。
+
+  search in time：相对于只检测目标点是否碰撞，而是用循环检测从起点到终点全部的位置（会损失部分进入墙的动量），然后用normal更新速度，以及新的目标点
+
+  search in position：在目标点附近searchable set中检测最近的、可达（flood fill）的目标点
+
+  
