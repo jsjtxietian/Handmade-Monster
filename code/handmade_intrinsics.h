@@ -7,6 +7,55 @@
 #include "math.h"
 
 inline int32
+SignOf(int32 Value)
+{
+    int32 Result = (Value >= 0) ? 1 : -1;
+    return (Result);
+}
+
+inline real32
+SquareRoot(real32 Real32)
+{
+    real32 Result = sqrtf(Real32);
+    return (Result);
+}
+
+inline real32
+AbsoluteValue(real32 Real32)
+{
+    real32 Result = fabs(Real32);
+    return (Result);
+}
+
+inline uint32
+RotateLeft(uint32 Value, int32 Amount)
+{
+#if COMPILER_MSVC
+    uint32 Result = _rotl(Value, Amount);
+#else
+    // TODO: Actually port this to other compiler platforms!
+    Amount &= 31;
+    uint32 Result = ((Value << Amount) | (Value >> (32 - Amount)));
+#endif
+
+    return (Result);
+}
+
+inline uint32
+RotateRight(uint32 Value, int32 Amount)
+{
+#if COMPILER_MSVC
+    uint32 Result = _rotr(Value, Amount);
+#else
+    // TODO: Actually port this to other compiler platforms!
+    Amount &= 31;
+    uint32 Result = ((Value >> Amount) | (Value << (32 - Amount)));
+#endif
+
+    return (Result);
+}
+
+inline int32
 RoundReal32ToInt32(real32 Real32)
 {
     int32 Result = (int32)roundf(Real32);
@@ -24,6 +73,13 @@ inline int32
 FloorReal32ToInt32(real32 Real32)
 {
     int32 Result = (int32)floorf(Real32);
+    return (Result);
+}
+
+inline int32
+CeilReal32ToInt32(real32 Real32)
+{
+    int32 Result = (int32)ceilf(Real32);
     return (Result);
 }
 

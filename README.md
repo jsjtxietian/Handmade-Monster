@@ -265,16 +265,54 @@ Assert((&Input->Controllers[0].Terminator - &Input->Controllers[0].Buttons[0]) =
 * Microsoft Spy++是一个非常好的查看Windows操作系统的窗口、消息、进程、线程信息的工具。
 * RESOURCE: How do I switch a window between normal and fullscreen? https://devblogs.microsoft.com/oldnewthing/20100412-00/?p=14353
 
-#### day Player Movement
+#### day50 Player Movement & Collision
 
 * [Tagged union - Wikipedia](https://en.wikipedia.org/wiki/Tagged_union)
 
 * [2006--degreve--reflection_refraction.pdf (stanford.edu)](https://graphics.stanford.edu/courses/cs148-10-summer/docs/2006--degreve--reflection_refraction.pdf) Reflect speed when player hits the wall (or make the speed align the wall). This can be implemented by a clever verctor math `v' = v - 2 * Inner(v, r) * r`. r means the vector of the reflecting direction.
 
-* player会stick against wall，会因为一直认为自己会撞进墙而卡住（检测**一帧**后会移动到的地方是不是有碰撞），撞墙的时候要考虑加速度和速度，速度依然指向墙内。
+* 如果检测**一帧**后会移动到的地方是不是有碰撞，player会stick against wall，会因为一直认为自己会撞进墙而卡住，撞墙的时候要考虑加速度和速度，速度依然指向墙内。
 
-  search in time：相对于只检测目标点是否碰撞，而是用循环检测从起点到终点全部的位置（会损失部分进入墙的动量），然后用normal更新速度，以及新的目标点
+  * search in time：相对于只检测目标点是否碰撞，而是用检测碰撞点，然后把player移动到碰撞点，然后用normal和剩余的动量（否则会损失部分进入墙的动量）更新速度尝试移动，如果继续碰撞，设置一个最大循环次数。float精度问题：把player稍微从墙推开一些
+  
+* search in position：在目标点附近searchable set中检测最近的、可达（flood fill）的目标点。
+  
+* [_rotl, _rotl64, _rotr, _rotr64 | Microsoft Docs](https://docs.microsoft.com/en-us/cpp/c-runtime-library/reference/rotl-rotl64-rotr-rotr64?view=msvc-160)
 
-  search in position：在目标点附近searchable set中检测最近的、可达（flood fill）的目标点
+* Minkowski sum
+
+* 碰撞测试：
+
+  * [Hyperplane separation theorem](https://link.zhihu.com/?target=http%3A//en.wikipedia.org/wiki/Hyperplane_separation_theorem) （或称separating axis theorem/SAT）：凸形状相交测试的基本原理。在[怎样判断平面上一个矩形和一个圆形是否有重叠？ - Milo Yip 的回答](http://www.zhihu.com/question/24251545/answer/27184960)中，其实背后也是使用了SAT。
+  * [Gilbert-Johnson-Keerthi distance algorithm](https://link.zhihu.com/?target=http%3A//en.wikipedia.org/wiki/Gilbert%E2%80%93Johnson%E2%80%93Keerthi_distance_algorithm) (GJK距离算法)：计算两个凸形状的距离（可用于相交测试）
+  * [Sweep and prune](https://link.zhihu.com/?target=http%3A//en.wikipedia.org/wiki/Sweep_and_prune)：用于broad phase碰撞检测，找出物体AABB是否相交。对于时空上连续的物体运动，算法最坏O(n^2)、最好O(n)。
 
   
+
+#### day62 Hash-based World Storage & Spatially Partitioning Entities & Hitpoints Attack
+
+* 整个世界的entity都在更新，Divide entities into high (靠近相机的区块，camera space entities，记录float坐标), low (记录tile坐标) and dormant categories，然后更新之。每人都有自己virtual的update函数太慢了。
+
+* 删去dormant entity，high low entity有各自的index，只在low entity创建entity，会被相机激活为high；entity list ：free list / compact the array
+
+* slot map：https://seanmiddleditch.com/2013-01-05-data-structures-for-game-developers-the-slot-map/
+
+* spatial hash：
+
+  * https://www.gamedev.net/articles/programming/general-and-gameplay-programming/spatial-hashing-r2697/  
+  * perfect hash http://hhoppe.com/proj/perfecthash/
+  * http://www.cs.ucf.edu/~jmesit/publications/scsc%202005.pdf
+
+* 压缩sparse：octree、quad tree、kd tree、RLE
+
+* always write usage code first
+
+* ```c++
+  #define InvalidCodePath Assert(!"InvalidCodePath");
+  ```
+
+* 
+
+
+
+#### day

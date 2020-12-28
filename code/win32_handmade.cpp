@@ -874,11 +874,11 @@ Win32ProcessPendingMessages(win32_state *State, game_controller_input *KeyboardC
                 }
                 else if (VKCode == VK_ESCAPE)
                 {
-                    Win32ProcessKeyboardMessage(&KeyboardController->Start, IsDown);
+                    Win32ProcessKeyboardMessage(&KeyboardController->Back, IsDown);
                 }
                 else if (VKCode == VK_SPACE)
                 {
-                    Win32ProcessKeyboardMessage(&KeyboardController->Back, IsDown);
+                    Win32ProcessKeyboardMessage(&KeyboardController->Start, IsDown);
                 }
 #if HANDMADE_INTERNAL
                 else if (VKCode == 'P')
@@ -1183,7 +1183,7 @@ WinMain(HINSTANCE Instance,
 #endif
 
             game_memory GameMemory = {};
-            GameMemory.PermanentStorageSize = Megabytes(64);
+            GameMemory.PermanentStorageSize = Megabytes(256);
             GameMemory.TransientStorageSize = Gigabytes(1);
             GameMemory.DEBUGPlatformFreeFileMemory = DEBUGPlatformFreeFileMemory;
             GameMemory.DEBUGPlatformReadEntireFile = DEBUGPlatformReadEntireFile;

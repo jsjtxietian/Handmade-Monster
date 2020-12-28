@@ -1,3 +1,4 @@
 build/
 test/
+test2/
 *.out

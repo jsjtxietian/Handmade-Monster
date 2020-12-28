@@ -1,11 +1,9 @@
 #if !defined(HANDMADE_PLATFORM_H)
 /*
   NOTE:
-
   HANDMADE_INTERNAL:
     0 - Build for public release
     1 - Build for developer only
-
   HANDMADE_SLOW:
     0 - Not slow code allowed!
     1 - Slow code welcome.
@@ -82,6 +80,8 @@ extern "C"
 #define Assert(Expression)
 #endif
 
+#define InvalidCodePath Assert(!"InvalidCodePath");
+
 #define Kilobytes(Value) ((Value)*1024LL)
 #define Megabytes(Value) (Kilobytes(Value) * 1024LL)
 #define Gigabytes(Value) (Megabytes(Value) * 1024LL)
@@ -109,7 +109,6 @@ extern "C"
 */
 #if HANDMADE_INTERNAL
     /* IMPORTANT:
-
    These are NOT for doing anything in the shipping game - they are
    blocking and the write doesn't protect against lost data!
 */
