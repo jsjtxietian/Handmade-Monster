@@ -1,3 +1,4 @@
+
 // TODO: Think about what the real safe margin is!
 #define TILE_CHUNK_SAFE_MARGIN (INT32_MAX / 64)
 #define TILE_CHUNK_UNINITIALIZED INT32_MAX
@@ -25,8 +26,9 @@ inline bool32
 IsCanonical(world *World, real32 TileRel)
 {
     // TODO: Fix floating point math so this can be exact?
-    bool32 Result = ((TileRel >= -0.5f * World->ChunkSideInMeters) &&
-                     (TileRel <= 0.5f * World->ChunkSideInMeters));
+    real32 Epsilon = 0.0001f;
+    bool32 Result = ((TileRel >= -(0.5f * World->ChunkSideInMeters + Epsilon)) &&
+                     (TileRel <= (0.5f * World->ChunkSideInMeters + Epsilon)));
 
     return (Result);
 }
@@ -302,15 +304,31 @@ ChangeEntityLocationRaw(memory_arena *Arena, world *World, uint32 LowEntityIndex
 internal void
 ChangeEntityLocation(memory_arena *Arena, world *World,
                      uint32 LowEntityIndex, low_entity *LowEntity,
-                     world_position *OldP, world_position *NewP)
+                     world_position NewPInit)
 {
+    world_position *OldP = 0;
+    world_position *NewP = 0;
+
+    if (!IsSet(&LowEntity->Sim, EntityFlag_Nonspatial) && IsValid(LowEntity->P))
+    {
+        OldP = &LowEntity->P;
+    }
+
+    if (IsValid(NewPInit))
+    {
+        NewP = &NewPInit;
+    }
+
     ChangeEntityLocationRaw(Arena, World, LowEntityIndex, OldP, NewP);
+
     if (NewP)
     {
         LowEntity->P = *NewP;
+        ClearFlag(&LowEntity->Sim, EntityFlag_Nonspatial);
     }
     else
     {
         LowEntity->P = NullPosition();
+        AddFlag(&LowEntity->Sim, EntityFlag_Nonspatial);
     }
 }

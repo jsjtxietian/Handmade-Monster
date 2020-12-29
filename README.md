@@ -311,8 +311,22 @@ Assert((&Input->Controllers[0].Terminator - &Input->Controllers[0].Buttons[0]) =
   #define InvalidCodePath Assert(!"InvalidCodePath");
   ```
 
-* 
 
 
+#### day69 Simulation Region & Collision
 
-#### day
+* 大世界的限制：float精度 => 局部坐标系（现有：low的tile position & offset转到high的float2）。很多entity的限制：cpu（现有，区分low&high，两套更新代码）。
+* ”利用虚拟相机（simulation region），去间断更新世界“，放弃low entity的概念，low entity只作为存储格式。
+  * Define sim_entity and stored_entity. stored_entity is for storage and sim_entity is for simulation. Every frame, pull relevant entities to our simulation region, simulate it and render it. 
+  * BeginSim: eneities copied into sim, position translated to float, indexes change to ref
+  * EndSim: entites copied to sim, postion translated to int & float, ref change to indexes
+  * Sim放在transientmemory里
+  * 在simulation region外再有一个high boundary，在high boundary中所有的entities都会被考虑，但只有simulation region会被模拟（防止simulation region的entity走出去一些，但没有物理模拟等情况）
+* [Lyapunov stability - Wikipedia](https://en.wikipedia.org/wiki/Lyapunov_stability)
+* iterative movement中要考虑物理问题（更新4次），Avoid callbacks, plain switch statements are just better on every aspect.
+* Collision: [Double dispatch - Wikipedia](https://en.wikipedia.org/wiki/Double_dispatch)
+  * [C9 Lectures: Dr. Ralf Lämmel - Advanced Functional Programming - The Expression Problem | Going Deep | Channel 9 (msdn.com)](https://channel9.msdn.com/Shows/Going+Deep/C9-Lectures-Dr-Ralf-Laemmel-Advanced-Functional-Programming-The-Expression-Problem)
+  * AAA/Adventure style：entity types are few / responses are few
+  * fundamental qualities/properties, entites are compositon of these qualities
+  * 如果把两两的collision规则存在哈希表，那么快速删除一个物体的碰撞规则就很麻烦
+
