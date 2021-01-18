@@ -321,12 +321,94 @@ Assert((&Input->Controllers[0].Terminator - &Input->Controllers[0].Buttons[0]) =
   * BeginSim: eneities copied into sim, position translated to float, indexes change to ref
   * EndSim: entites copied to sim, postion translated to int & float, ref change to indexes
   * Sim放在transientmemory里
-  * 在simulation region外再有一个high boundary，在high boundary中所有的entities都会被考虑，但只有simulation region会被模拟（防止simulation region的entity走出去一些，但没有物理模拟等情况）
+  * 在simulation region外再有一个high boundary，在high boundary中所有的entities都会被考虑，但只有simulation region会被模拟（防止simulation region的entity走出去一些，或者外围的物体有体积，但没有被物理模拟等情况）；也可以考虑将跨区块的entity存两份，一边一份
 * [Lyapunov stability - Wikipedia](https://en.wikipedia.org/wiki/Lyapunov_stability)
 * iterative movement中要考虑物理问题（更新4次），Avoid callbacks, plain switch statements are just better on every aspect.
 * Collision: [Double dispatch - Wikipedia](https://en.wikipedia.org/wiki/Double_dispatch)
   * [C9 Lectures: Dr. Ralf Lämmel - Advanced Functional Programming - The Expression Problem | Going Deep | Channel 9 (msdn.com)](https://channel9.msdn.com/Shows/Going+Deep/C9-Lectures-Dr-Ralf-Laemmel-Advanced-Functional-Programming-The-Expression-Problem)
   * AAA/Adventure style：entity types are few / responses are few
   * fundamental qualities/properties, entites are compositon of these qualities
-  * 如果把两两的collision规则存在哈希表，那么快速删除一个物体的碰撞规则就很麻烦
+  * 如果把两两的collision规则存在哈希表，那么快速删除一个物体的碰撞规则就很麻烦。 every time we just insert two entries so that we can query with each one.
+
+
+
+#### day78 Stairwells 
+
+* 4D向量：四元数、颜色
+
+* 碰撞区分inside/outside：behaviour & robustness上的考虑
+
+* 两个AABB矩形碰撞：互相至少有一个重合点，[2D collision detection - Game development | MDN (mozilla.org)](https://developer.mozilla.org/en-US/docs/Games/Techniques/2D_collision_detection)
+
+* ```c++
+  //C不允许直接对一个::member做sizeof
+  ArrayCount(((game_input *)0)->Controllers)
+//C++
+  sizeof(decltype(game_input::Controllers[0]))//报错
+  sizeof(game_input::Controllers))//g++
+  //用std::declval
+  ```
+  
+
+
+
+#### day87 Ground 
+
+* Ground/Rooms，Constructive Solid Geometry
+  * [Polygon soup - Wikipedia](https://en.wikipedia.org/wiki/Polygon_soup) 多边形模型的最一般化类型是「多边形汤」，它是多边形的集合，而那些多边形之间并没有几何上的连系，也不含拓扑信息。
+  * Quake：filled and carve，不可能掉出世界(其他地方都是solid)
+  * Unreal：empty and fill
+  * Robustness > efficiency
+* Mega Texture
+  * [Talk:MegaTexture - Wikipedia](https://en.wikipedia.org/wiki/Talk%3AMegaTexture)
+  * [浅谈Virtual Texture - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/138484024)
+* ABI
+  * [X86调用约定 - 维基百科，自由的百科全书 (wikipedia.org)](https://zh.wikipedia.org/wiki/X86调用约定)
+  * [你们说的ABI，Application Binary Interface到底是什么东西？ - 知乎 (zhihu.com)](https://www.zhihu.com/question/381069847)
+* Premultiplied Alpha—— Non-Premultiplied Alpha does not distribute over liner interpolation
+  * [Alpha compositing - Wikipedia](https://en.wikipedia.org/wiki/Alpha_compositing)
+  * [Premultiplied alpha (microsoft.github.io)](https://microsoft.github.io/Win2D/html/PremultipliedAlpha.htm)
+* arcsynthesis [Learning Modern 3D Graphics Programming (roiatalla.com)](https://www.roiatalla.com/public/arcsynthesis/html/index.html)
+* Memory is a big line
+
+
+
+#### day92  Push Buffer rendering & Filling Rotated and Scaled Rectangles
+
+* 定义Push Buffer，方便对渲染的排序（不让游戏架构管sort），quickly、minimaly
+
+* a renderer working
+  * Explicit surface rasteriser：先求出三角形和每一行的交点，光栅化需要的部分
+  * Implicit surface rasteriser：选出4*4的boundary，走遍boundary所有的pixel，mask掉不要的
+
+* ```c++
+  #define InvalidDefaultCase default: {InvalidCodePath;} break
+  ```
+
+* Ridiculous Trick: Prepend the type_name with RenderGroupEntryType to make the Identifier, and #define PushRenderElement macro for a type-safe way of correctly setting the type field in one step
+  
+  
+  ```c++
+  enum render_group_entry_type
+  {
+      RenderGroupEntryType_render_entry_clear,
+      RenderGroupEntryType_render_entry_bitmap,
+      RenderGroupEntryType_render_entry_rectangle,
+  };
+  #define PushRenderElement(Group, type) (type *)PushRenderElement_(Group, sizeof(type), RenderGroupEntryType_##type)
+  ```
+
+* [Graphics Pipeline | The ryg blog (wordpress.com)](https://fgiesen.wordpress.com/category/graphics-pipeline/)
+
+* The PushBuffer is an abstraction layer relying on memory for communication instead of a bunch of functions, casey prefer API design in this way in general
+
+* Downsample, upsample，Mipmaps，Texture sampling handles anti-aliasing for the alpha'd bitmaps（MSAA for edges）
+
+
+
+#### day
+
+* the nature of rendering without subpixel accuracy：The number of pixels and texels isn't dividing out evenly，linear blend
+* how to do smooth subpixel rendering for pixel art graphics, that doesn't blur but still moves smoothly：显式写pixel shader；MSAA；Manual pre upsample
+* 94
 
