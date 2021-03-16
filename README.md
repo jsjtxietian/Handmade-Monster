@@ -406,9 +406,18 @@ Assert((&Input->Controllers[0].Terminator - &Input->Controllers[0].Buttons[0]) =
 
 
 
-#### day
+#### day 95
 
 * the nature of rendering without subpixel accuracy：The number of pixels and texels isn't dividing out evenly，linear blend
 * how to do smooth subpixel rendering for pixel art graphics, that doesn't blur but still moves smoothly：显式写pixel shader；MSAA；Manual pre upsample
-* 94
+* gamma correction:
+  * sRGB(artist monitor) => Linear(Math) => sRGB(player monitor)，framebuffer既可以是sRGB也可以是linear，但是linear 16bit per channel，sRGB 8bit（avoid banding, linear下不一定精度够），用sRGB省bandwidth
+  * [sRGB - Wikipedia](https://en.wikipedia.org/wiki/SRGB)
+  * [Linear-Space Lighting (i.e. Gamma) – Filmic Worlds](http://filmicworlds.com/blog/linear-space-lighting-i-e-gamma/)
+  * [Hable John Uncharted2 Hdr Lighting (slideshare.net)](https://www.slideshare.net/ozlael/hable-john-uncharted2-hdr-lighting)
+  * 也讨论了很多premultiply alpha
 
+* optimize pragma
+  * https://docs.microsoft.com/en-us/cpp/preprocessor/optimize?view=msvc-160
+  * https://docs.microsoft.com/en-us/cpp/build/optimization-best-practices?view=msvc-160
+  * https://docs.microsoft.com/en-us/cpp/build/reference/zo-enhance-optimized-debugging?view=msvc-160
